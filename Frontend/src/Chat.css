@@ -1,0 +1,41 @@
+.chats {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+}
+
+/* Each message group */
+.chatRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* USER */
+.userDiv {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.userMessage {
+  background-color: #4a4a4a;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 15px 15px 0 15px;
+  max-width: 60%;
+}
+
+/* BOT */
+.gptDiv {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.gptMessage {
+  background-color: #2a2a2a;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 15px 15px 15px 0;
+  max-width: 60%;
+}
