@@ -42,9 +42,10 @@ button:hover {
 }
 
 .history li {
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+    gap:10px;
 }
 
 .history li:hover {
@@ -65,8 +66,14 @@ button span {
     font-size: 20px;
 }
 
+.thread-title {
+    flex: 1;
+}
 
-.delete-btn {
+
+.delete-btn {  
+  opacity:0;
+  width:auto;
   background: transparent;
   border: none;
   padding: 5px;
@@ -80,4 +87,8 @@ button span {
 
 .delete-btn:hover i {
   color: red;
+}
+
+li:hover .delete-btn {
+  opacity: 1;
 }

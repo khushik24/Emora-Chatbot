@@ -3,25 +3,35 @@ import { useState, useEffect, useContext } from "react";
 import { MyContext } from "./MyContext.jsx";
 import { BeatLoader } from "react-spinners";
 
-
-  const quotes = [
-    "You are stronger than you think",
-    "Take it one day at a time",
-    "Your feelings are valid",
-    "Small steps still move you forward ",
-    "You’ve survived 100% of your bad days",
-    "It’s okay to not be okay"
-  ];
+const quotes = [
+  "You are stronger than you think",
+  "Take it one day at a time",
+  "Your feelings are valid",
+  "Small steps still move you forward",
+  "You’ve survived 100% of your bad days",
+  "It’s okay to not be okay"
+];
 
 function ChatWindow() {
+  const {
+    prompt,
+    setPrompt,
+    setReply,
+    currThreadId,
+    prevChats,
+    setPrevChats
+  } = useContext(MyContext);
 
-  const { 
-  prompt, setPrompt, setReply, currThreadId,prevChats, setPrevChats  } = useContext(MyContext);
-  const [loading,setLoading] = useState(false);
- 
+  const [loading, setLoading] = useState(false);
+  const [quote, setQuote] = useState("");
+  const [fade, setFade] = useState(true);
 
+  // ✅ SEND MESSAGE FUNCTION
   const getReply = async () => {
+    if (!prompt.trim()) return;
+
     setLoading(true);
+
     const options = {
       method: "POST",
       headers: {
@@ -34,25 +44,23 @@ function ChatWindow() {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/api/chat", options);;
+      const response = await fetch("http://localhost:8080/api/chat", options);
       const data = await response.json();
 
-const userMessage = prompt;
+      const userMessage = prompt;
 
-setReply(data.reply);
+      const botReply = data.reply?.trim()
+        ? data.reply
+        : "I'm here for you. Tell me more about what's troubling you.";
 
-const botReply = data.reply?.trim() 
-  ? data.reply 
-  : "I'm here for you. Tell me more about what's troubling you.";
+      setReply(botReply);
 
-setReply(botReply);
+      setPrevChats(prev => [
+        ...prev,
+        { user: userMessage, bot: botReply }
+      ]);
 
-setPrevChats(prev => [
-  ...prev,
-  { user: userMessage, bot: botReply }
-]);
-
-setPrompt(""); 
+      setPrompt("");
     } catch (err) {
       console.log(err);
     }
@@ -60,9 +68,7 @@ setPrompt("");
     setLoading(false);
   };
 
-  const [quote, setQuote] = useState("");
-  const [fade, setFade] = useState(true);
-
+  // ✅ ROTATING QUOTES
   useEffect(() => {
     const changeQuote = () => {
       setFade(false);
@@ -91,17 +97,26 @@ setPrompt("");
         <p>{quote}</p>
       </div>
 
-      <div className="loaderCenter">
-     <BeatLoader color="#fff" loading={loading}></BeatLoader>
-     </div>
-
       <div className="chatArea">
-          {prevChats.map((chat, index) => (
-            <div key={index} className="chatMessage">
-              <p className="userMsg"><strong>You:</strong> {chat.user}</p>
-              <p className="botMsg"><strong>Bot:</strong> {chat.bot}</p>
+        {prevChats.map((chat, index) => (
+          <div key={index} className="chatMessage">
+            <div className="chat-row left">
+              <div className="chat-bubble user">{chat.user}</div>
             </div>
-           ))}
+
+            <div className="chat-row right">
+              <div className="chat-bubble bot">{chat.bot}</div>
+            </div>
+          </div>
+        ))}
+
+        {loading && (
+          <div className="chat-row right">
+            <div className="chat-bubble bot typing">
+              <BeatLoader size={6} color="#aaa" />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="chatInput">
@@ -110,9 +125,17 @@ setPrompt("");
           placeholder="How was your day?"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown = {(e)=>e.key == 'Enter'?getReply():''}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              getReply();
+            }
+          }}
         />
-        <button onClick={getReply}>➤</button>
+
+        <button onClick={getReply} disabled={loading}>
+          ➤
+        </button>
       </div>
     </div>
   );

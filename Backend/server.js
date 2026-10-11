@@ -19,16 +19,18 @@ app.use("/api",chatRoutes);
 
 import Thread from "./models/Thread.js";
 
-app.listen(PORT, ()=>{
-  console.log(`server running on ${PORT}`);
-  connectDB();
-});
-
-const connectDB = async() =>{
-  try{
+const connectDB = async () => {
+  try {
     await mongoose.connect(process.env.MONGO_DB_URL);
-    console.log("connectect with database");
-  }catch(err){
-    console.log("err");
+    console.log("Connected with database");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on ${PORT}`);
+    });
+
+  } catch (err) {
+    console.log(err);
   }
 };
+
+connectDB();

@@ -13,10 +13,10 @@ function Sidebar() {
     setPrompt,
     setReply,
     setCurrThreadId,
-    setPrevChats
+    setPrevChats,
+    
   } = useContext(MyContext);
 
-  // 🔹 Fetch all threads
   useEffect(() => {
     const getAllThreads = async () => {
       try {
@@ -37,7 +37,7 @@ function Sidebar() {
     getAllThreads();
   }, [currThreadId, setAllThreads]);
 
-  // 🔹 Create new chat
+  
   const createNewChat = () => {
     setNewChat(true);
     setPrompt("");
@@ -46,7 +46,7 @@ function Sidebar() {
     setPrevChats([]);
   };
 
-  // 🔹 Change thread (🔥 FIXED LOGIC HERE)
+  
   const changeThread = async (newThreadId) => {
     setCurrThreadId(newThreadId);
     setNewChat(false);
@@ -61,7 +61,7 @@ function Sidebar() {
 
       console.log("THREAD DATA:", data);
 
-      // ✅ Convert role/content → user/bot
+  
       const formattedChats = [];
       let lastUserIndex = -1;
 
@@ -76,7 +76,7 @@ function Sidebar() {
           if (lastUserIndex !== -1) {
             formattedChats[lastUserIndex].bot = chat.content;
           } else {
-            // edge case: assistant comes first
+           
             formattedChats.push({
               user: "",
               bot: chat.content
@@ -93,7 +93,6 @@ function Sidebar() {
     }
   };
 
-  // 🔹 Delete thread
   const deleteThread = async (threadId) => {
     try {
       await fetch(`http://localhost:8080/api/thread/${threadId}`, {
@@ -116,7 +115,7 @@ function Sidebar() {
 
   return (
     <section className="sidebar">
-      {/* 🔹 New Chat Button */}
+    
       <button onClick={createNewChat}>
         <img src={logo} alt="emora" className="logo" />
         <span>
@@ -124,7 +123,7 @@ function Sidebar() {
         </span>
       </button>
 
-      {/* 🔹 Threads List */}
+     
       <ul className="history">
         {allThreads.map(thread => (
           <li
@@ -136,7 +135,7 @@ function Sidebar() {
             <button
               className="delete-btn"
               onClick={e => {
-                e.stopPropagation(); // ✅ prevent thread click
+                e.stopPropagation(); 
                 deleteThread(thread.threadId);
               }}
             >
@@ -146,7 +145,6 @@ function Sidebar() {
         ))}
       </ul>
 
-      {/* 🔹 Footer */}
       <div className="sign">
         <p>Stay Healthy &hearts;</p>
       </div>
