@@ -5,6 +5,10 @@ import { generateReply } from "../utils/gemini.js";
 
 const router = express.Router();
 
+router.get("/test", (req, res) => {
+  res.send("Emora backend is working!");
+});
+
 router.post("/test", async (req, res) => {
   try {
     const thread = new Thread({
