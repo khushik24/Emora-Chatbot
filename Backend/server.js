@@ -1,35 +1,36 @@
+
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import mongoose from "mongoose";
 import chatRoutes from "./routes/chat.js";
 
 dotenv.config();
 
 const app = express();
-const PORT =8080;
+const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  })
+);
+
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-app.use("/api",chatRoutes);
-
-import Thread from "./models/Thread.js";
+app.use("/api", chatRoutes);
 
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_DB_URL);
     console.log("Connected with database");
 
-    app.listen(PORT, () => {
-      console.log(`Server running on ${PORT}`);
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Server running on port ${PORT}`);
     });
-
   } catch (err) {
-    console.log(err);
+    console.error("MongoDB connection failed:", err.message);
+    process.exit(1);
   }
 };
 
