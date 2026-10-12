@@ -12,9 +12,8 @@ const PORT = process.env.PORT || 8080;
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://emora-chatbot.vercel.app",
-  "https://emora-chatbot-knvlm08kr-project-3a3b.vercel.app"
-];
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
   cors({
