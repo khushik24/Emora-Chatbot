@@ -15,10 +15,14 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      const isVercelPreview =
+        origin && /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
+      if (!origin || allowedOrigins.includes(origin) || isVercelPreview) {
         callback(null, true);
       } else {
         callback(new Error("Origin not allowed by CORS"));
