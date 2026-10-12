@@ -1,7 +1,10 @@
+
 import "./ChatWindow.css";
 import { useState, useEffect, useContext } from "react";
 import { MyContext } from "./MyContext.jsx";
 import { BeatLoader } from "react-spinners";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 const quotes = [
   "You are stronger than you think",
@@ -26,28 +29,36 @@ function ChatWindow() {
   const [quote, setQuote] = useState("");
   const [fade, setFade] = useState(true);
 
-  // ✅ SEND MESSAGE FUNCTION
+  // Send message to the deployed backend
   const getReply = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || loading) return;
 
+    if (!API_URL) {
+      console.error("VITE_API_URL is not configured.");
+      setReply("Configuration error. Please try again later.");
+      return;
+    }
+
+    const userMessage = prompt.trim();
     setLoading(true);
 
-    const options = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        message: prompt,
-        threadId: currThreadId
-      })
-    };
-
     try {
-      const response = await fetch("http://localhost:8080/api/chat", options);
+      const response = await fetch(`${API_URL}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          threadId: currThreadId
+        })
+      });
+
       const data = await response.json();
 
-      const userMessage = prompt;
+      if (!response.ok) {
+        throw new Error(data.error || `Request failed: ${response.status}`);
+      }
 
       const botReply = data.reply?.trim()
         ? data.reply
@@ -62,13 +73,14 @@ function ChatWindow() {
 
       setPrompt("");
     } catch (err) {
-      console.log(err);
+      console.error("Chat request failed:", err);
+      setReply("Sorry, I couldn't connect right now. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // ✅ ROTATING QUOTES
+  // Rotate motivational quotes
   useEffect(() => {
     const changeQuote = () => {
       setFade(false);
@@ -88,7 +100,6 @@ function ChatWindow() {
 
   return (
     <div className="chatWindow">
-
       <div className="navbar">
         <h2>Emora</h2>
       </div>
@@ -100,13 +111,17 @@ function ChatWindow() {
       <div className="chatArea">
         {prevChats.map((chat, index) => (
           <div key={index} className="chatMessage">
-            <div className="chat-row left">
-              <div className="chat-bubble user">{chat.user}</div>
-            </div>
+            {chat.user && (
+              <div className="chat-row left">
+                <div className="chat-bubble user">{chat.user}</div>
+              </div>
+            )}
 
-            <div className="chat-row right">
-              <div className="chat-bubble bot">{chat.bot}</div>
-            </div>
+            {chat.bot && (
+              <div className="chat-row right">
+                <div className="chat-bubble bot">{chat.bot}</div>
+              </div>
+            )}
           </div>
         ))}
 
@@ -124,8 +139,8 @@ function ChatWindow() {
           type="text"
           placeholder="How was your day?"
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={e => setPrompt(e.target.value)}
+          onKeyDown={e => {
             if (e.key === "Enter") {
               e.preventDefault();
               getReply();
@@ -133,7 +148,7 @@ function ChatWindow() {
           }}
         />
 
-        <button onClick={getReply} disabled={loading}>
+        <button onClick={getReply} disabled={loading || !prompt.trim()}>
           ➤
         </button>
       </div>

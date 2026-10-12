@@ -1,8 +1,11 @@
+
 import "./Sidebar.css";
 import logo from "./assets/logo.png";
 import { MyContext } from "./MyContext.jsx";
 import { useContext, useEffect } from "react";
 import { v1 as uuidv1 } from "uuid";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 function Sidebar() {
   const {
@@ -14,30 +17,35 @@ function Sidebar() {
     setReply,
     setCurrThreadId,
     setPrevChats,
-    
   } = useContext(MyContext);
 
+  // Load all previous chats
   useEffect(() => {
     const getAllThreads = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/thread");
+        const response = await fetch(`${API_URL}/api/thread`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch threads: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        const filteredData = data.map(thread => ({
+        const filteredData = data.map((thread) => ({
           threadId: thread.threadId,
-          title: thread.title
+          title: thread.title,
         }));
 
         setAllThreads(filteredData);
       } catch (err) {
-        console.error(err);
+        console.error("Error loading threads:", err);
       }
     };
 
     getAllThreads();
   }, [currThreadId, setAllThreads]);
 
-  
+  // Create a new chat
   const createNewChat = () => {
     setNewChat(true);
     setPrompt("");
@@ -46,7 +54,7 @@ function Sidebar() {
     setPrevChats([]);
   };
 
-  
+  // Open an existing chat
   const changeThread = async (newThreadId) => {
     setCurrThreadId(newThreadId);
     setNewChat(false);
@@ -55,77 +63,81 @@ function Sidebar() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/thread/${newThreadId}`
+        `${API_URL}/api/thread/${newThreadId}`
       );
+
+      if (!response.ok) {
+        throw new Error(`Failed to load chat: ${response.status}`);
+      }
+
       const data = await response.json();
-
-      console.log("THREAD DATA:", data);
-
-  
       const formattedChats = [];
       let lastUserIndex = -1;
 
-      (data.chats || []).forEach(chat => {
+      (data.chats || []).forEach((chat) => {
         if (chat.role === "user") {
           formattedChats.push({
             user: chat.content,
-            bot: ""
+            bot: "",
           });
           lastUserIndex = formattedChats.length - 1;
         } else if (chat.role === "assistant") {
           if (lastUserIndex !== -1) {
             formattedChats[lastUserIndex].bot = chat.content;
           } else {
-           
             formattedChats.push({
               user: "",
-              bot: chat.content
+              bot: chat.content,
             });
           }
         }
       });
 
-      console.log("FORMATTED:", formattedChats);
-
       setPrevChats(formattedChats);
     } catch (err) {
-      console.error(err);
+      console.error("Error opening chat:", err);
     }
   };
 
+  // Delete a chat
   const deleteThread = async (threadId) => {
     try {
-      await fetch(`http://localhost:8080/api/thread/${threadId}`, {
-        method: "DELETE"
-      });
+      const response = await fetch(
+        `${API_URL}/api/thread/${threadId}`,
+        { method: "DELETE" }
+      );
 
-      setAllThreads(prev =>
-        prev.filter(thread => thread.threadId !== threadId)
+      if (!response.ok) {
+        throw new Error(`Failed to delete chat: ${response.status}`);
+      }
+
+      setAllThreads((prev) =>
+        prev.filter((thread) => thread.threadId !== threadId)
       );
 
       if (threadId === currThreadId) {
         setCurrThreadId(uuidv1());
         setPrevChats([]);
+        setPrompt("");
+        setReply(null);
         setNewChat(true);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error deleting chat:", err);
     }
   };
 
   return (
     <section className="sidebar">
-    
       <button onClick={createNewChat}>
-        <img src={logo} alt="emora" className="logo" />
+        <img src={logo} alt="Emora" className="logo" />
         <span>
           <i className="fa-solid fa-pen-to-square"></i>
         </span>
       </button>
 
-     
       <ul className="history">
-        {allThreads.map(thread => (
+        {allThreads.map((thread) => (
           <li
             key={thread.threadId}
             onClick={() => changeThread(thread.threadId)}
@@ -134,10 +146,11 @@ function Sidebar() {
 
             <button
               className="delete-btn"
-              onClick={e => {
-                e.stopPropagation(); 
+              onClick={(e) => {
+                e.stopPropagation();
                 deleteThread(thread.threadId);
               }}
+              aria-label={`Delete ${thread.title}`}
             >
               <i className="fa-solid fa-trash"></i>
             </button>
