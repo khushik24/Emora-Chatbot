@@ -10,9 +10,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://emora-chatbot.vercel.app",
+  "https://emora-chatbot-knvlm08kr-project-3a3b.vercel.app"
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins
   })
 );
 
